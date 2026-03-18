@@ -34,7 +34,6 @@ parking-management/
 | Decisão | Justificativa |
 |---------|---------------|
 | **Gradle multi-module** para hexagonal | Garante em compile-time que domain não importa framework |
-| **KSP** ao invés de KAPT | KAPT está deprecated no Kotlin 2.x; KSP é 2x mais rápido |
 | **`io.micronaut.library`** nos adapters | Apenas bootstrap é a application; adapters são libraries |
 | **`@Factory` no bootstrap** | Domain objects não têm anotações DI; a factory os registra como beans |
 | **Pipeline handlers recebem ports via construtor** | Preserva boundary hexagonal — sem `@Inject` no domain |
