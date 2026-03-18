@@ -1,0 +1,28 @@
+micronaut:
+  application:
+    name: parking-management
+  server:
+    port: 3003
+
+datasources:
+  default:
+    url: jdbc:mysql://localhost:3306/parking
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: root
+    password: root
+    dialect: MYSQL
+
+jpa:
+  default:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: none
+
+flyway:
+  datasources:
+    default:
+      enabled: true
+
+garage-simulator:
+  base-url: http://localhost
