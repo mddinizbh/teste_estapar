@@ -22,3 +22,6 @@ Thumbs.db
 
 # Claude Code
 .claude/
+
+# Prompt files
+prompt_usado.md
