@@ -4,8 +4,10 @@ import com.marley.parking.domain.model.vo.LicensePlate
 import com.marley.parking.domain.pipeline.Pipeline
 import com.marley.parking.domain.pipeline.exit.ExitContext
 import com.marley.parking.domain.port.inbound.VehicleExitUseCase
+import jakarta.inject.Singleton
 import java.time.Instant
 
+@Singleton
 class VehicleExitUseCaseImpl(
     private val exitPipeline: Pipeline<ExitContext>
 ) : VehicleExitUseCase {

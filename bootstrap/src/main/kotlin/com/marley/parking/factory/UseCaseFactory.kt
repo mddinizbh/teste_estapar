@@ -1,16 +1,8 @@
 package com.marley.parking.factory
 
-import com.marley.parking.application.usecase.RevenueQueryUseCaseImpl
-import com.marley.parking.application.usecase.VehicleEntryUseCaseImpl
-import com.marley.parking.application.usecase.VehicleExitUseCaseImpl
-import com.marley.parking.application.usecase.VehicleParkedUseCaseImpl
 import com.marley.parking.domain.pipeline.Pipeline
 import com.marley.parking.domain.pipeline.entry.*
 import com.marley.parking.domain.pipeline.exit.*
-import com.marley.parking.domain.port.inbound.RevenueQueryUseCase
-import com.marley.parking.domain.port.inbound.VehicleEntryUseCase
-import com.marley.parking.domain.port.inbound.VehicleExitUseCase
-import com.marley.parking.domain.port.inbound.VehicleParkedUseCase
 import com.marley.parking.domain.port.outbound.ParkingSessionRepository
 import com.marley.parking.domain.port.outbound.SectorRepository
 import com.marley.parking.domain.port.outbound.SpotRepository
@@ -52,25 +44,4 @@ class UseCaseFactory {
             CloseSessionHandler(parkingSessionRepository)
         )
     )
-
-    @Singleton
-    fun vehicleEntryUseCase(
-        entryPipeline: Pipeline<EntryContext>
-    ): VehicleEntryUseCase = VehicleEntryUseCaseImpl(entryPipeline)
-
-    @Singleton
-    fun vehicleParkedUseCase(
-        parkingSessionRepository: ParkingSessionRepository,
-        spotRepository: SpotRepository
-    ): VehicleParkedUseCase = VehicleParkedUseCaseImpl(parkingSessionRepository, spotRepository)
-
-    @Singleton
-    fun vehicleExitUseCase(
-        exitPipeline: Pipeline<ExitContext>
-    ): VehicleExitUseCase = VehicleExitUseCaseImpl(exitPipeline)
-
-    @Singleton
-    fun revenueQueryUseCase(
-        parkingSessionRepository: ParkingSessionRepository
-    ): RevenueQueryUseCase = RevenueQueryUseCaseImpl(parkingSessionRepository)
 }

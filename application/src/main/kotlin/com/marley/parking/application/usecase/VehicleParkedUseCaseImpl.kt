@@ -6,8 +6,10 @@ import com.marley.parking.domain.model.vo.LicensePlate
 import com.marley.parking.domain.port.inbound.VehicleParkedUseCase
 import com.marley.parking.domain.port.outbound.ParkingSessionRepository
 import com.marley.parking.domain.port.outbound.SpotRepository
+import jakarta.inject.Singleton
 import java.time.Instant
 
+@Singleton
 class VehicleParkedUseCaseImpl(
     private val parkingSessionRepository: ParkingSessionRepository,
     private val spotRepository: SpotRepository

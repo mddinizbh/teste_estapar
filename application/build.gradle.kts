@@ -1,5 +1,14 @@
 plugins {
     kotlin("jvm")
+    id("com.google.devtools.ksp")
+    id("io.micronaut.library")
+}
+
+micronaut {
+    processing {
+        incremental(true)
+        annotations("com.marley.parking.application.*")
+    }
 }
 
 dependencies {
