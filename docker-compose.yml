@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: parking
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DATASOURCES_DEFAULT_URL: jdbc:mysql://mysql:3306/parking
+      DATASOURCES_DEFAULT_USERNAME: root
+      DATASOURCES_DEFAULT_PASSWORD: root
+      GARAGE_SIMULATOR_BASE_URL: http://localhost
+    network_mode: host
+
+  simulator:
+    image: cfontes0estapar/garage-sim:1.0.0
+    network_mode: host
