@@ -3,6 +3,7 @@ package com.marley.parking.factory
 import com.marley.parking.domain.pipeline.Pipeline
 import com.marley.parking.domain.pipeline.entry.*
 import com.marley.parking.domain.pipeline.exit.*
+import com.marley.parking.domain.pipeline.parked.*
 import com.marley.parking.domain.port.outbound.ParkingSessionRepository
 import com.marley.parking.domain.port.outbound.SectorRepository
 import com.marley.parking.domain.port.outbound.SpotRepository
@@ -42,6 +43,19 @@ class UseCaseFactory {
             CalculateChargeHandler(pricingService),
             ReleaseSpotHandler(spotRepository),
             CloseSessionHandler(parkingSessionRepository)
+        )
+    )
+
+    @Singleton
+    fun parkedPipeline(
+        parkingSessionRepository: ParkingSessionRepository,
+        spotRepository: SpotRepository
+    ): Pipeline<ParkedContext> = Pipeline(
+        listOf(
+            FindActiveSessionForParkedHandler(parkingSessionRepository),
+            FindSpotByCoordinatesHandler(spotRepository),
+            OccupySpotHandler(spotRepository),
+            ParkSessionHandler(parkingSessionRepository)
         )
     )
 }

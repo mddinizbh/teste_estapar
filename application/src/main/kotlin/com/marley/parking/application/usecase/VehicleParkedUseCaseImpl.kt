@@ -1,11 +1,10 @@
 package com.marley.parking.application.usecase
 
-import com.marley.parking.domain.exception.VehicleNotFoundException
 import com.marley.parking.domain.model.vo.Coordinates
 import com.marley.parking.domain.model.vo.LicensePlate
+import com.marley.parking.domain.pipeline.Pipeline
+import com.marley.parking.domain.pipeline.parked.ParkedContext
 import com.marley.parking.domain.port.inbound.VehicleParkedUseCase
-import com.marley.parking.domain.port.outbound.ParkingSessionRepository
-import com.marley.parking.domain.port.outbound.SpotRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Singleton
 import java.time.Instant
@@ -14,24 +13,19 @@ private val logger = KotlinLogging.logger {}
 
 @Singleton
 class VehicleParkedUseCaseImpl(
-    private val parkingSessionRepository: ParkingSessionRepository,
-    private val spotRepository: SpotRepository
+    private val parkedPipeline: Pipeline<ParkedContext>
 ) : VehicleParkedUseCase {
 
-    override fun execute(licensePlate: LicensePlate, lat: Double, lng: Double) {
-        logger.info { "Processing PARKED | plate=${licensePlate.value}, lat=$lat, lng=$lng" }
+    override fun execute(licensePlate: LicensePlate, coordinates: Coordinates) {
+        logger.info { "Processing PARKED | plate=${licensePlate.value}, coordinates=$coordinates" }
 
-        val session = parkingSessionRepository.findActiveByPlate(licensePlate)
-            ?: throw VehicleNotFoundException("No active session for plate ${licensePlate.value}")
+        val context = ParkedContext(
+            licensePlate = licensePlate,
+            coordinates = coordinates,
+            parkedTime = Instant.now()
+        )
+        parkedPipeline.execute(context)
 
-        val spot = spotRepository.findByCoordinates(Coordinates(lat, lng))
-            ?: throw VehicleNotFoundException("No spot found at coordinates ($lat, $lng)")
-
-        session.park(spot.id, Instant.now())
-        spot.occupy()
-        spotRepository.save(spot)
-        parkingSessionRepository.save(session)
-
-        logger.info { "PARKED processed | plate=${licensePlate.value}, spotId=${spot.id}" }
+        logger.info { "PARKED processed | plate=${licensePlate.value}" }
     }
 }

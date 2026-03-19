@@ -1,9 +1,7 @@
 package com.marley.parking.adapter.outbound.persistence.adapter
 
 import com.marley.parking.adapter.outbound.persistence.mapper.PersistenceMapper
-import com.marley.parking.adapter.outbound.persistence.repository.ParkingSessionMicronautRepository
 import com.marley.parking.adapter.outbound.persistence.repository.SectorMicronautRepository
-import com.marley.parking.adapter.outbound.persistence.repository.SpotMicronautRepository
 import com.marley.parking.domain.model.Sector
 import com.marley.parking.domain.model.vo.SectorName
 import com.marley.parking.domain.port.outbound.SectorRepository
@@ -12,9 +10,7 @@ import org.slf4j.LoggerFactory
 
 @Singleton
 class SectorRepositoryAdapter(
-    private val sectorMicronautRepository: SectorMicronautRepository,
-    private val spotMicronautRepository: SpotMicronautRepository,
-    private val parkingSessionMicronautRepository: ParkingSessionMicronautRepository
+    private val sectorMicronautRepository: SectorMicronautRepository
 ) : SectorRepository {
 
     override fun findByName(name: SectorName): Sector? {
@@ -23,23 +19,14 @@ class SectorRepositoryAdapter(
             .orElse(null)
     }
 
-    override fun findWithAvailableCapacity(): Sector? {
-        return sectorMicronautRepository.findAll().firstOrNull { entity ->
-            val activeSessions = parkingSessionMicronautRepository.countActiveBySectorId(entity.id!!)
-            activeSessions < entity.maxCapacity
-        }?.let { PersistenceMapper.toDomain(it) }
+    override fun findAll(): List<Sector> {
+        return sectorMicronautRepository.findAll().map { PersistenceMapper.toDomain(it) }
     }
 
     override fun save(sector: Sector): Sector {
         val entity = PersistenceMapper.toEntity(sector)
         val saved = sectorMicronautRepository.save(entity)
         return PersistenceMapper.toDomain(saved)
-    }
-
-    override fun countOccupiedSpots(sectorName: SectorName): Int {
-        val sector = sectorMicronautRepository.findByName(sectorName.value).orElse(null)
-            ?: return 0
-        return spotMicronautRepository.countBySectorIdAndOccupiedTrue(sector.id!!).toInt()
     }
 
     override fun saveAll(sectors: List<Sector>) {

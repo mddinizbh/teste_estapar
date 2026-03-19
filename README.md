@@ -38,12 +38,14 @@ parking-management/
 | **`io.micronaut.library`** nos adapters | Apenas bootstrap é a application; adapters são libraries |
 | **`@Factory` no bootstrap** | Domain objects não têm anotações DI; a factory os registra como beans |
 | **Pipeline handlers recebem ports via construtor** | Preserva boundary hexagonal — sem `@Inject` no domain |
-| **`when()` simples** para dispatch de webhook | 3 tipos fixos não justificam Chain of Responsibility |
+| **`ParkingStatus.ACTIVE_STATUSES` no domain** | Define quais status são "ativos" como regra de negócio, não decisão do adapter |
+| **`SectorRepository.findAll()` + `Sector.isFull()`** | Regra de capacidade reside no domain; adapter apenas busca dados |
+| **`WebhookEventType` enum** para dispatch de webhook | Elimina strings mágicas; `when` exaustivo sem `else` garante tratamento de todos os tipos em compile-time |
 | **Inserção idempotente no startup** | `saveAll` verifica existência individual antes de inserir; permite reiniciar sem duplicatas |
 
 ## Design Patterns
 
-### Chain of Responsibility — Pipelines de ENTRY e EXIT
+### Chain of Responsibility — Pipelines de ENTRY, PARKED e EXIT
 
 Cada pipeline é uma lista ordenada de handlers. Interface no domain:
 
@@ -53,16 +55,21 @@ interface PipelineHandler<T> {
 }
 ```
 
-**Entry Pipeline:** CheckSectorCapacity → CalculateDynamicPrice → ReserveSpot → CreateSession
+**Entry Pipeline:** CheckDuplicateEntry → CheckSectorCapacity → CalculateDynamicPrice → CreateSession
+
+**Parked Pipeline:** FindActiveSessionForParked → FindSpotByCoordinates → OccupySpot → ParkSession
 
 **Exit Pipeline:** FindActiveSession → CalculateCharge → ReleaseSpot → CloseSession
 
+Os três fluxos seguem o mesmo padrão arquitetural: reads primeiro, writes depois. Toda regra de negócio (capacidade de setor, status ativos, ocupação de vaga) reside no domain — adapters apenas persistem e buscam dados.
+
 ### Object Calisthenics
 
-- **Primitivos encapsulados** em `@JvmInline value class` (LicensePlate, Money, SectorName, OccupancyRate)
-- **Sem `var` público** nos domain models — mutação via métodos de negócio (`park()`, `exit()`)
+- **Primitivos encapsulados** em `@JvmInline value class` (LicensePlate, Money, SectorName, OccupancyRate, Coordinates)
+- **Sem `var` público** nos domain models — mutação via métodos de negócio (`park()`, `exit()`, `occupy()`)
 - **Backing properties** para encapsular estado interno
 - **Early return** e `when` exhaustivo ao invés de `else`
+- **Ports usam Value Objects** nos contratos (ex: `Coordinates` em vez de `lat/lng` primitivos)
 
 ## Regras de Negócio
 
@@ -92,8 +99,8 @@ Isso garante que reiniciar a aplicação (ou múltiplas instâncias) nunca causa
 
 ### Fluxo de Eventos
 
-1. **ENTRY** → atribui setor com vagas → calcula preço dinâmico → reserva vaga → cria session
-2. **PARKED** → encontra session ENTERED pela placa → associa spot por coordenadas exatas
+1. **ENTRY** → verifica duplicata → busca setor com capacidade (via domain `Sector.isFull()`) → calcula preço dinâmico → cria session
+2. **PARKED** → encontra session ativa pela placa → localiza spot por coordenadas → ocupa vaga (`Spot.occupy()`) → atualiza session para PARKED
 3. **EXIT** → encontra session ativa → calcula cobrança → libera vaga → fecha session
 
 ## API
@@ -164,7 +171,9 @@ docker-compose up mysql
 
 - **PricingServiceBehaviorTest** — 4 faixas de ocupação + 5 cenários de cobrança
 - **ParkingSessionTest** — validações de transição de estado (ENTERED→PARKED→EXITED)
+- **SpotTest** — ocupação e liberação de vagas, exceção para vaga já ocupada
 - **EntryPipelineTest** — setor cheio, setor com vagas, ocupação 60%
+- **ParkedPipelineTest** — sem sessão ativa, coordenadas sem vaga, vaga já ocupada, sucesso
 - **ExitPipelineTest** — veículo não encontrado, saída normal com cobrança
 
 ### Testes de Integração (@MicronautTest + Testcontainers)

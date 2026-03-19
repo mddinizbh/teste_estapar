@@ -3,5 +3,9 @@ package com.marley.parking.domain.model
 enum class ParkingStatus {
     ENTERED,
     PARKED,
-    EXITED
+    EXITED;
+
+    companion object {
+        val ACTIVE_STATUSES = listOf(ENTERED, PARKED)
+    }
 }

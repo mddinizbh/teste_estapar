@@ -14,15 +14,16 @@ class CheckSectorCapacityHandler(
 ) : PipelineHandler<EntryContext> {
 
     override fun handle(context: EntryContext, next: (EntryContext) -> EntryContext): EntryContext {
-        val sector = sectorRepository.findWithAvailableCapacity()
-            ?: throw SectorFullException()
+        val sectors = sectorRepository.findAll()
+        var activeCount = 0
+        val sector = sectors.firstOrNull { s ->
+            activeCount = parkingSessionRepository.countActiveBySector(s.name)
+            !s.isFull(activeCount)
+        } ?: throw SectorFullException()
 
-        val activeSessions = parkingSessionRepository.countActiveBySector(sector.name)
-        if (sector.isFull(activeSessions)) throw SectorFullException("Sector ${sector.name.value} is full")
+        val rate = sector.occupancyRate(activeCount)
 
-        val rate = sector.occupancyRate(activeSessions)
-
-        logger.info { "Sector assigned | sector=${sector.name.value}, activeSessions=$activeSessions, occupancy=$rate" }
+        logger.info { "Sector assigned | sector=${sector.name.value}, activeSessions=$activeCount, occupancy=$rate" }
 
         return next(context.copy(sector = sector, occupancyRate = rate))
     }

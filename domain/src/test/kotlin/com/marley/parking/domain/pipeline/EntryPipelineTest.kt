@@ -25,9 +25,8 @@ class EntryPipelineTest : BehaviorSpec({
     Given("todos os setores estão cheios") {
         val sectorRepo = object : SectorRepository {
             override fun findByName(name: SectorName): Sector? = null
-            override fun findWithAvailableCapacity(): Sector? = null
+            override fun findAll(): List<Sector> = emptyList()
             override fun save(sector: Sector): Sector = sector
-            override fun countOccupiedSpots(sectorName: SectorName): Int = 0
             override fun saveAll(sectors: List<Sector>) {}
         }
         val sessionRepo = stubSessionRepository()
@@ -60,9 +59,8 @@ class EntryPipelineTest : BehaviorSpec({
 
         val sectorRepo = object : SectorRepository {
             override fun findByName(name: SectorName): Sector? = sector
-            override fun findWithAvailableCapacity(): Sector? = sector
+            override fun findAll(): List<Sector> = listOf(sector)
             override fun save(sector: Sector): Sector = sector
-            override fun countOccupiedSpots(sectorName: SectorName): Int = 2
             override fun saveAll(sectors: List<Sector>) {}
         }
         val sessionRepo = stubSessionRepository(activeCount = 2)
@@ -96,9 +94,8 @@ class EntryPipelineTest : BehaviorSpec({
 
         val sectorRepo = object : SectorRepository {
             override fun findByName(name: SectorName): Sector? = sector
-            override fun findWithAvailableCapacity(): Sector? = sector
+            override fun findAll(): List<Sector> = listOf(sector)
             override fun save(sector: Sector): Sector = sector
-            override fun countOccupiedSpots(sectorName: SectorName): Int = 6
             override fun saveAll(sectors: List<Sector>) {}
         }
         val sessionRepo = stubSessionRepository(activeCount = 6)

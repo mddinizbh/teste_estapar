@@ -5,6 +5,7 @@ import com.marley.parking.adapter.outbound.persistence.mapper.PersistenceMapper
 import com.marley.parking.adapter.outbound.persistence.repository.ParkingSessionMicronautRepository
 import com.marley.parking.adapter.outbound.persistence.repository.SectorMicronautRepository
 import com.marley.parking.domain.model.ParkingSession
+import com.marley.parking.domain.model.ParkingStatus
 import com.marley.parking.domain.model.vo.LicensePlate
 import com.marley.parking.domain.model.vo.Money
 import com.marley.parking.domain.model.vo.SectorName
@@ -37,7 +38,7 @@ class ParkingSessionRepositoryAdapter(
 
     override fun findActiveByPlate(plate: LicensePlate): ParkingSession? {
         return parkingSessionMicronautRepository
-            .findByLicensePlateAndStatusIn(plate.value, listOf("ENTERED", "PARKED"))
+            .findByLicensePlateAndStatusIn(plate.value, ParkingStatus.ACTIVE_STATUSES.map { it.name })
             .map { entity ->
                 val sectorName = sectorMicronautRepository.findById(entity.sectorId)
                     .map { it.name }.orElse("")

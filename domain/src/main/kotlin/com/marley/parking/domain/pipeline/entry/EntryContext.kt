@@ -8,6 +8,8 @@ import com.marley.parking.domain.model.vo.Money
 import com.marley.parking.domain.model.vo.OccupancyRate
 import java.time.Instant
 
+// Nullable var fields are a conscious trade-off of the pipeline pattern:
+// each handler populates its output field, and subsequent handlers consume it via !!.
 data class EntryContext(
     val licensePlate: LicensePlate,
     val entryTime: Instant,
