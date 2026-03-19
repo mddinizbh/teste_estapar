@@ -36,6 +36,9 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core:${property("kotestVersion")}")
     testImplementation("org.testcontainers:mysql:${property("testcontainersVersion")}")
     testImplementation("org.testcontainers:testcontainers:${property("testcontainersVersion")}")
+    testImplementation("io.micronaut:micronaut-http-client")
+    testRuntimeOnly("mysql:mysql-connector-java:8.0.33")
+    testRuntimeOnly("com.h2database:h2")
 }
 
 tasks.withType<Test> {

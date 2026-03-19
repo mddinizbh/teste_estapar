@@ -8,7 +8,7 @@ open class SpotEntity(
     @Id
     open var id: Long = 0,
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sector_id", nullable = false)
     open var sector: SectorEntity = SectorEntity(),
 

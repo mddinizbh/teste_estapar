@@ -16,6 +16,7 @@ Thumbs.db
 
 # Kotlin
 *.class
+.kotlin/
 
 # Environment
 .env
@@ -23,4 +24,5 @@ Thumbs.db
 # Claude Code
 .claude/
 
-
+# Notes
+prompt_usado.md
