@@ -1,6 +1,5 @@
 package com.marley.parking.application.usecase
 
-import com.marley.parking.domain.exception.SpotAlreadyOccupiedException
 import com.marley.parking.domain.exception.VehicleNotFoundException
 import com.marley.parking.domain.model.vo.Coordinates
 import com.marley.parking.domain.model.vo.LicensePlate
@@ -27,10 +26,6 @@ class VehicleParkedUseCaseImpl(
 
         val spot = spotRepository.findByCoordinates(Coordinates(lat, lng))
             ?: throw VehicleNotFoundException("No spot found at coordinates ($lat, $lng)")
-
-        if (spot.isOccupied) {
-            throw SpotAlreadyOccupiedException("Spot ${spot.id} at ($lat, $lng) is already occupied")
-        }
 
         session.park(spot.id, Instant.now())
         spot.occupy()

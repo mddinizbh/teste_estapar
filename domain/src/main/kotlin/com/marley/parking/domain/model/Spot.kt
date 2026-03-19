@@ -1,5 +1,6 @@
 package com.marley.parking.domain.model
 
+import com.marley.parking.domain.exception.SpotAlreadyOccupiedException
 import com.marley.parking.domain.model.vo.Coordinates
 import com.marley.parking.domain.model.vo.SectorName
 
@@ -13,6 +14,7 @@ class Spot(
     val isOccupied: Boolean get() = _occupied
 
     fun occupy() {
+        if (_occupied) throw SpotAlreadyOccupiedException("Spot $id is already occupied")
         _occupied = true
     }
 
