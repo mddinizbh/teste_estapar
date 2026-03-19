@@ -24,9 +24,9 @@ class UseCaseFactory {
         pricingService: PricingService
     ): Pipeline<EntryContext> = Pipeline(
         listOf(
-            CheckSectorCapacityHandler(sectorRepository),
+            CheckDuplicateEntryHandler(parkingSessionRepository),
+            CheckSectorCapacityHandler(sectorRepository, parkingSessionRepository),
             CalculateDynamicPriceHandler(pricingService),
-            ReserveSpotHandler(spotRepository),
             CreateSessionHandler(parkingSessionRepository)
         )
     )

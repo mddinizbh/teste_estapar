@@ -39,6 +39,7 @@ parking-management/
 | **`@Factory` no bootstrap** | Domain objects não têm anotações DI; a factory os registra como beans |
 | **Pipeline handlers recebem ports via construtor** | Preserva boundary hexagonal — sem `@Inject` no domain |
 | **`when()` simples** para dispatch de webhook | 3 tipos fixos não justificam Chain of Responsibility |
+| **Inserção idempotente no startup** | `saveAll` verifica existência individual antes de inserir; permite reiniciar sem duplicatas |
 
 ## Design Patterns
 
@@ -78,6 +79,16 @@ interface PipelineHandler<T> {
 
 - Primeiros **30 minutos**: GRÁTIS
 - Após 30 minutos: `ceil(duração em horas) × price_at_entry`
+
+### Startup — Carga Idempotente da Garagem
+
+No boot, o `StartupLoader` busca a configuração do simulador (setores e spots) e persiste no banco. A inserção é **idempotente por elemento**:
+
+- **Setores**: verifica `findByName()` antes de inserir. Se já existe, pula com log.
+- **Spots**: verifica `findByCoordinates(lat, lng)` antes de inserir. Se já existe, pula com log.
+- Falha em um elemento individual é logada como warn e não impede os demais.
+
+Isso garante que reiniciar a aplicação (ou múltiplas instâncias) nunca causa erro de duplicate key.
 
 ### Fluxo de Eventos
 

@@ -15,4 +15,7 @@ interface ParkingSessionMicronautRepository : CrudRepository<ParkingSessionEntit
 
     @Query("SELECT COALESCE(SUM(ps.amountCharged), 0) FROM ParkingSessionEntity ps WHERE ps.sectorId = :sectorId AND ps.status = 'EXITED' AND ps.exitTime >= :startTime AND ps.exitTime < :endTime")
     fun sumChargedBySectorAndDateRange(sectorId: Long, startTime: Instant, endTime: Instant): BigDecimal
+
+    @Query("SELECT COUNT(ps) FROM ParkingSessionEntity ps WHERE ps.sectorId = :sectorId AND ps.status IN ('ENTERED', 'PARKED')")
+    fun countActiveBySectorId(sectorId: Long): Long
 }

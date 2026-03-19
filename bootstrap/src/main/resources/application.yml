@@ -25,4 +25,4 @@ flyway:
       enabled: true
 
 garage-simulator:
-  base-url: http://localhost
+  base-url: http://localhost:3000

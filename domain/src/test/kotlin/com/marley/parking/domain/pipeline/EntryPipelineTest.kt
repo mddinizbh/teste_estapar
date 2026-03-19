@@ -30,13 +30,11 @@ class EntryPipelineTest : BehaviorSpec({
             override fun countOccupiedSpots(sectorName: SectorName): Int = 0
             override fun saveAll(sectors: List<Sector>) {}
         }
-        val spotRepo = stubSpotRepository()
         val sessionRepo = stubSessionRepository()
 
         val pipeline = Pipeline(listOf(
-            CheckSectorCapacityHandler(sectorRepo),
+            CheckSectorCapacityHandler(sectorRepo, sessionRepo),
             CalculateDynamicPriceHandler(pricingService),
-            ReserveSpotHandler(spotRepo),
             CreateSessionHandler(sessionRepo)
         ))
 
@@ -59,7 +57,6 @@ class EntryPipelineTest : BehaviorSpec({
             basePrice = Money(BigDecimal("10.00")),
             maxCapacity = 10
         )
-        val spot = Spot(1L, SectorName("A"), Coordinates(-23.5, -46.6))
 
         val sectorRepo = object : SectorRepository {
             override fun findByName(name: SectorName): Sector? = sector
@@ -68,19 +65,11 @@ class EntryPipelineTest : BehaviorSpec({
             override fun countOccupiedSpots(sectorName: SectorName): Int = 2
             override fun saveAll(sectors: List<Sector>) {}
         }
-        val spotRepo = object : SpotRepository {
-            override fun findById(id: Long): Spot? = spot
-            override fun findByCoordinates(coordinates: Coordinates): Spot? = spot
-            override fun findFirstAvailableBySector(sectorName: SectorName): Spot? = spot
-            override fun save(spot: Spot): Spot = spot
-            override fun saveAll(spots: List<Spot>) {}
-        }
-        val sessionRepo = stubSessionRepository()
+        val sessionRepo = stubSessionRepository(activeCount = 2)
 
         val pipeline = Pipeline(listOf(
-            CheckSectorCapacityHandler(sectorRepo),
+            CheckSectorCapacityHandler(sectorRepo, sessionRepo),
             CalculateDynamicPriceHandler(pricingService),
-            ReserveSpotHandler(spotRepo),
             CreateSessionHandler(sessionRepo)
         ))
 
@@ -104,7 +93,6 @@ class EntryPipelineTest : BehaviorSpec({
             basePrice = Money(BigDecimal("10.00")),
             maxCapacity = 10
         )
-        val spot = Spot(1L, SectorName("A"), Coordinates(-23.5, -46.6))
 
         val sectorRepo = object : SectorRepository {
             override fun findByName(name: SectorName): Sector? = sector
@@ -113,19 +101,11 @@ class EntryPipelineTest : BehaviorSpec({
             override fun countOccupiedSpots(sectorName: SectorName): Int = 6
             override fun saveAll(sectors: List<Sector>) {}
         }
-        val spotRepo = object : SpotRepository {
-            override fun findById(id: Long): Spot? = spot
-            override fun findByCoordinates(coordinates: Coordinates): Spot? = spot
-            override fun findFirstAvailableBySector(sectorName: SectorName): Spot? = spot
-            override fun save(spot: Spot): Spot = spot
-            override fun saveAll(spots: List<Spot>) {}
-        }
-        val sessionRepo = stubSessionRepository()
+        val sessionRepo = stubSessionRepository(activeCount = 6)
 
         val pipeline = Pipeline(listOf(
-            CheckSectorCapacityHandler(sectorRepo),
+            CheckSectorCapacityHandler(sectorRepo, sessionRepo),
             CalculateDynamicPriceHandler(pricingService),
-            ReserveSpotHandler(spotRepo),
             CreateSessionHandler(sessionRepo)
         ))
 
@@ -150,9 +130,10 @@ private fun stubSpotRepository() = object : SpotRepository {
     override fun saveAll(spots: List<Spot>) {}
 }
 
-private fun stubSessionRepository() = object : ParkingSessionRepository {
+private fun stubSessionRepository(activeCount: Int = 0) = object : ParkingSessionRepository {
     override fun save(session: ParkingSession): ParkingSession = session
     override fun findActiveByPlate(plate: LicensePlate): ParkingSession? = null
+    override fun countActiveBySector(sectorName: SectorName): Int = activeCount
     override fun sumChargedBySectorAndDate(sectorName: SectorName, date: LocalDate): Money =
         Money(BigDecimal.ZERO)
 }

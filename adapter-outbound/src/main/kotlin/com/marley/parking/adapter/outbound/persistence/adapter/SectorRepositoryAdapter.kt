@@ -1,17 +1,20 @@
 package com.marley.parking.adapter.outbound.persistence.adapter
 
 import com.marley.parking.adapter.outbound.persistence.mapper.PersistenceMapper
+import com.marley.parking.adapter.outbound.persistence.repository.ParkingSessionMicronautRepository
 import com.marley.parking.adapter.outbound.persistence.repository.SectorMicronautRepository
 import com.marley.parking.adapter.outbound.persistence.repository.SpotMicronautRepository
 import com.marley.parking.domain.model.Sector
 import com.marley.parking.domain.model.vo.SectorName
 import com.marley.parking.domain.port.outbound.SectorRepository
 import jakarta.inject.Singleton
+import org.slf4j.LoggerFactory
 
 @Singleton
 class SectorRepositoryAdapter(
     private val sectorMicronautRepository: SectorMicronautRepository,
-    private val spotMicronautRepository: SpotMicronautRepository
+    private val spotMicronautRepository: SpotMicronautRepository,
+    private val parkingSessionMicronautRepository: ParkingSessionMicronautRepository
 ) : SectorRepository {
 
     override fun findByName(name: SectorName): Sector? {
@@ -22,8 +25,8 @@ class SectorRepositoryAdapter(
 
     override fun findWithAvailableCapacity(): Sector? {
         return sectorMicronautRepository.findAll().firstOrNull { entity ->
-            val occupied = spotMicronautRepository.countBySectorIdAndOccupiedTrue(entity.id!!)
-            occupied < entity.maxCapacity
+            val activeSessions = parkingSessionMicronautRepository.countActiveBySectorId(entity.id!!)
+            activeSessions < entity.maxCapacity
         }?.let { PersistenceMapper.toDomain(it) }
     }
 
@@ -40,7 +43,22 @@ class SectorRepositoryAdapter(
     }
 
     override fun saveAll(sectors: List<Sector>) {
-        val entities = sectors.map { PersistenceMapper.toEntity(it) }
-        sectorMicronautRepository.saveAll(entities)
+        sectors.forEach { sector ->
+            try {
+                val existing = findByName(sector.name)
+                if (existing != null) {
+                    log.info("Sector '{}' already exists, skipping", sector.name.value)
+                    return@forEach
+                }
+                save(sector)
+                log.info("Sector '{}' inserted successfully", sector.name.value)
+            } catch (e: Exception) {
+                log.warn("Failed to insert sector '{}': {}", sector.name.value, e.message)
+            }
+        }
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(SectorRepositoryAdapter::class.java)
     }
 }

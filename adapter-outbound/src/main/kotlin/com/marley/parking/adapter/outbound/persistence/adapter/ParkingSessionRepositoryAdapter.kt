@@ -46,6 +46,12 @@ class ParkingSessionRepositoryAdapter(
             .orElse(null)
     }
 
+    override fun countActiveBySector(sectorName: SectorName): Int {
+        val sectorEntity = sectorMicronautRepository.findByName(sectorName.value).orElse(null)
+            ?: return 0
+        return parkingSessionMicronautRepository.countActiveBySectorId(sectorEntity.id!!).toInt()
+    }
+
     override fun sumChargedBySectorAndDate(sectorName: SectorName, date: LocalDate): Money {
         val sectorEntity = sectorMicronautRepository.findByName(sectorName.value).orElse(null)
             ?: return Money(BigDecimal.ZERO)

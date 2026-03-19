@@ -13,25 +13,25 @@ interface GarageSimClient {
 
 @Serdeable
 data class GarageConfigResponse(
-    val garage: GarageData
-)
-
-@Serdeable
-data class GarageData(
-    val sectors: List<SectorData>
+    val garage: List<SectorData>,
+    val spots: List<SpotData>
 )
 
 @Serdeable
 data class SectorData(
     val sector: String,
-    val basePrice: Double,
-    val maxCapacity: Int,
-    val spots: List<SpotData>
+    val base_price: Double,
+    val max_capacity: Int,
+    val open_hour: String? = null,
+    val close_hour: String? = null,
+    val duration_limit_minutes: Int? = null
 )
 
 @Serdeable
 data class SpotData(
     val id: Long,
+    val sector: String,
     val lat: Double,
-    val lng: Double
+    val lng: Double,
+    val occupied: Boolean = false
 )

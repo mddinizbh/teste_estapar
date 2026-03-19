@@ -15,6 +15,7 @@ import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
+import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import jakarta.inject.Singleton
 import java.math.BigDecimal
@@ -104,6 +105,104 @@ class WebhookIntegrationTest(
                 String::class.java
             )
             response.status shouldBe HttpStatus.OK
+        }
+    }
+
+    Given("ENTRY duplicado para a mesma placa") {
+        Then("deve retornar HTTP 422 com DUPLICATE_ENTRY") {
+            val plate = "DUP-0001"
+
+            client.toBlocking().exchange(
+                HttpRequest.POST("/webhook", mapOf(
+                    "event_type" to "ENTRY",
+                    "license_plate" to plate,
+                    "entry_time" to "2026-01-02T10:00:00Z"
+                )),
+                String::class.java
+            )
+
+            try {
+                client.toBlocking().exchange(
+                    HttpRequest.POST("/webhook", mapOf(
+                        "event_type" to "ENTRY",
+                        "license_plate" to plate,
+                        "entry_time" to "2026-01-02T10:05:00Z"
+                    )),
+                    Map::class.java
+                )
+                throw AssertionError("Expected HttpClientResponseException")
+            } catch (e: HttpClientResponseException) {
+                e.status shouldBe HttpStatus.UNPROCESSABLE_ENTITY
+            }
+        }
+    }
+
+    Given("PARKED em vaga já ocupada por outro veículo") {
+        Then("deve retornar HTTP 422 com SPOT_OCCUPIED") {
+            val plate1 = "OCC-0001"
+            val plate2 = "OCC-0002"
+
+            // Vehicle 1: ENTRY + PARKED at spot (-23.5505, -46.6333)
+            client.toBlocking().exchange(
+                HttpRequest.POST("/webhook", mapOf(
+                    "event_type" to "ENTRY",
+                    "license_plate" to plate1,
+                    "entry_time" to "2026-01-03T10:00:00Z"
+                )),
+                String::class.java
+            )
+            client.toBlocking().exchange(
+                HttpRequest.POST("/webhook", mapOf(
+                    "event_type" to "PARKED",
+                    "license_plate" to plate1,
+                    "lat" to -23.5505,
+                    "lng" to -46.6333
+                )),
+                String::class.java
+            )
+
+            // Vehicle 2: ENTRY, then try to PARKED at the same spot
+            client.toBlocking().exchange(
+                HttpRequest.POST("/webhook", mapOf(
+                    "event_type" to "ENTRY",
+                    "license_plate" to plate2,
+                    "entry_time" to "2026-01-03T10:05:00Z"
+                )),
+                String::class.java
+            )
+
+            try {
+                client.toBlocking().exchange(
+                    HttpRequest.POST("/webhook", mapOf(
+                        "event_type" to "PARKED",
+                        "license_plate" to plate2,
+                        "lat" to -23.5505,
+                        "lng" to -46.6333
+                    )),
+                    Map::class.java
+                )
+                throw AssertionError("Expected HttpClientResponseException")
+            } catch (e: HttpClientResponseException) {
+                e.status shouldBe HttpStatus.UNPROCESSABLE_ENTITY
+            }
+        }
+    }
+
+    Given("EXIT sem sessão ativa") {
+        Then("deve retornar HTTP 404 com VEHICLE_NOT_FOUND") {
+            try {
+                client.toBlocking().exchange(
+                    HttpRequest.POST("/webhook", mapOf(
+                        "event_type" to "EXIT",
+                        "license_plate" to "NONE-0001",
+                        "exit_time" to "2026-01-04T11:00:00Z"
+                    )),
+                    Map::class.java
+                )
+                throw AssertionError("Expected HttpClientResponseException")
+            } catch (e: HttpClientResponseException) {
+                e.status shouldBe HttpStatus.NOT_FOUND
+            }
         }
     }
 })

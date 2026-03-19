@@ -1,5 +1,7 @@
 package com.marley.parking.domain.model
 
+import com.marley.parking.domain.exception.InvalidSessionStateException
+import com.marley.parking.domain.exception.VehicleAlreadyParkedException
 import com.marley.parking.domain.model.vo.LicensePlate
 import com.marley.parking.domain.model.vo.Money
 import com.marley.parking.domain.model.vo.SectorName
@@ -71,14 +73,14 @@ class ParkingSession private constructor(
     }
 
     fun park(spotId: Long, parkedTime: Instant) {
-        check(_status == ParkingStatus.ENTERED) { "Can only park a vehicle with status ENTERED, current: $_status" }
+        if (_status != ParkingStatus.ENTERED) throw VehicleAlreadyParkedException("Can only park a vehicle with status ENTERED, current: $_status")
         _spotId = spotId
         _parkedTime = parkedTime
         _status = ParkingStatus.PARKED
     }
 
     fun exit(amountCharged: Money, exitTime: Instant) {
-        check(_status == ParkingStatus.PARKED) { "Can only exit a vehicle with status PARKED, current: $_status" }
+        if (_status != ParkingStatus.PARKED) throw InvalidSessionStateException("Can only exit a vehicle with status PARKED, current: $_status")
         _amountCharged = amountCharged
         _exitTime = exitTime
         _status = ParkingStatus.EXITED

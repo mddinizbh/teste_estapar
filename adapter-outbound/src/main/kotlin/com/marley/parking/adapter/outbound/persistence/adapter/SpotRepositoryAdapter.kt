@@ -8,6 +8,7 @@ import com.marley.parking.domain.model.vo.Coordinates
 import com.marley.parking.domain.model.vo.SectorName
 import com.marley.parking.domain.port.outbound.SpotRepository
 import jakarta.inject.Singleton
+import org.slf4j.LoggerFactory
 
 @Singleton
 class SpotRepositoryAdapter(
@@ -45,10 +46,24 @@ class SpotRepositoryAdapter(
 
     override fun saveAll(spots: List<Spot>) {
         spots.forEach { spot ->
-            val sectorEntity = sectorMicronautRepository.findByName(spot.sectorName.value).orElse(null)
-                ?: throw IllegalStateException("Sector ${spot.sectorName.value} not found")
-            val entity = PersistenceMapper.toEntity(spot, sectorEntity)
-            spotMicronautRepository.save(entity)
+            try {
+                val existing = findByCoordinates(spot.coordinates)
+                if (existing != null) {
+                    log.info("Spot at ({}, {}) already exists, skipping", spot.coordinates.lat, spot.coordinates.lng)
+                    return@forEach
+                }
+                val sectorEntity = sectorMicronautRepository.findByName(spot.sectorName.value).orElse(null)
+                    ?: throw IllegalStateException("Sector ${spot.sectorName.value} not found")
+                val entity = PersistenceMapper.toEntity(spot, sectorEntity)
+                spotMicronautRepository.save(entity)
+                log.info("Spot at ({}, {}) inserted successfully", spot.coordinates.lat, spot.coordinates.lng)
+            } catch (e: Exception) {
+                log.warn("Failed to insert spot at ({}, {}): {}", spot.coordinates.lat, spot.coordinates.lng, e.message)
+            }
         }
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(SpotRepositoryAdapter::class.java)
     }
 }

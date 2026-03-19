@@ -18,22 +18,20 @@ class GarageConfigLoaderAdapter(
     override fun loadConfig(): GarageConfig {
         val response = garageSimClient.getGarageConfig()
 
-        val sectors = response.garage.sectors.map { sectorData ->
+        val sectors = response.garage.map { sectorData ->
             Sector(
                 name = SectorName(sectorData.sector),
-                basePrice = Money(BigDecimal.valueOf(sectorData.basePrice)),
-                maxCapacity = sectorData.maxCapacity
+                basePrice = Money(BigDecimal.valueOf(sectorData.base_price)),
+                maxCapacity = sectorData.max_capacity
             )
         }
 
-        val spots = response.garage.sectors.flatMap { sectorData ->
-            sectorData.spots.map { spotData ->
-                Spot(
-                    id = spotData.id,
-                    sectorName = SectorName(sectorData.sector),
-                    coordinates = Coordinates(spotData.lat, spotData.lng)
-                )
-            }
+        val spots = response.spots.map { spotData ->
+            Spot(
+                id = spotData.id,
+                sectorName = SectorName(spotData.sector),
+                coordinates = Coordinates(spotData.lat, spotData.lng)
+            )
         }
 
         return GarageConfig(sectors = sectors, spots = spots)

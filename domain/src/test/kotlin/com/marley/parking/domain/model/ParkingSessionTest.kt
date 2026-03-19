@@ -1,5 +1,7 @@
 package com.marley.parking.domain.model
 
+import com.marley.parking.domain.exception.InvalidSessionStateException
+import com.marley.parking.domain.exception.VehicleAlreadyParkedException
 import com.marley.parking.domain.model.vo.LicensePlate
 import com.marley.parking.domain.model.vo.Money
 import com.marley.parking.domain.model.vo.SectorName
@@ -57,8 +59,8 @@ class ParkingSessionTest : BehaviorSpec({
         )
 
         When("exit() é chamado sem park() antes") {
-            Then("deve lançar IllegalStateException") {
-                shouldThrow<IllegalStateException> {
+            Then("deve lançar InvalidSessionStateException") {
+                shouldThrow<InvalidSessionStateException> {
                     session.exit(Money(BigDecimal("10.00")), Instant.parse("2026-01-01T11:00:00Z"))
                 }
             }
@@ -75,8 +77,8 @@ class ParkingSessionTest : BehaviorSpec({
         session.park(1L, Instant.parse("2026-01-01T10:05:00Z"))
 
         When("park() é chamado novamente") {
-            Then("deve lançar IllegalStateException") {
-                shouldThrow<IllegalStateException> {
+            Then("deve lançar VehicleAlreadyParkedException") {
+                shouldThrow<VehicleAlreadyParkedException> {
                     session.park(2L, Instant.parse("2026-01-01T10:10:00Z"))
                 }
             }

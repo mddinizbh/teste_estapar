@@ -23,6 +23,7 @@ class ExitPipelineTest : BehaviorSpec({
         val sessionRepo = object : ParkingSessionRepository {
             override fun save(session: ParkingSession): ParkingSession = session
             override fun findActiveByPlate(plate: LicensePlate): ParkingSession? = null
+            override fun countActiveBySector(sectorName: SectorName): Int = 0
             override fun sumChargedBySectorAndDate(sectorName: SectorName, date: LocalDate): Money =
                 Money(BigDecimal.ZERO)
         }
@@ -61,6 +62,7 @@ class ExitPipelineTest : BehaviorSpec({
         val sessionRepo = object : ParkingSessionRepository {
             override fun save(session: ParkingSession): ParkingSession = session
             override fun findActiveByPlate(plate: LicensePlate): ParkingSession? = session
+            override fun countActiveBySector(sectorName: SectorName): Int = 1
             override fun sumChargedBySectorAndDate(sectorName: SectorName, date: LocalDate): Money =
                 Money(BigDecimal.ZERO)
         }

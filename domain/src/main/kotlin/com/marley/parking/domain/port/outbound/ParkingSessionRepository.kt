@@ -9,5 +9,6 @@ import java.time.LocalDate
 interface ParkingSessionRepository {
     fun save(session: ParkingSession): ParkingSession
     fun findActiveByPlate(plate: LicensePlate): ParkingSession?
+    fun countActiveBySector(sectorName: SectorName): Int
     fun sumChargedBySectorAndDate(sectorName: SectorName, date: LocalDate): Money
 }
