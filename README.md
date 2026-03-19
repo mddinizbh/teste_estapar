@@ -105,19 +105,61 @@ Isso garante que reiniciar a aplicação (ou múltiplas instâncias) nunca causa
 
 ## API
 
-### Webhook (porta 3003)
+### Webhook
 
 ```
 POST http://localhost:3003/webhook
+Content-Type: application/json
+
+{ "event_type": "ENTRY", "license_plate": "ABC-1234", "entry_time": "2025-01-01T10:00:00Z" }
+{ "event_type": "PARKED", "license_plate": "ABC-1234", "lat": -23.5505, "lng": -46.6333 }
+{ "event_type": "EXIT", "license_plate": "ABC-1234", "exit_time": "2025-01-01T12:00:00Z" }
 ```
 
-O simulador envia eventos ENTRY, PARKED e EXIT. Sempre retorna HTTP 200.
+**Respostas:**
+
+| Status | Quando |
+|--------|--------|
+| `200 OK` | Evento processado com sucesso, ou `event_type` desconhecido (ignorado com log warn) |
+| `400 Bad Request` | Campos obrigatórios ausentes ou inválidos (ex: `lat`/`lng` faltando no PARKED, `license_plate` null) |
+| `404 Not Found` | Veículo não encontrado — sem session ativa para a placa, ou coordenadas sem spot cadastrado |
+| `422 Unprocessable Entity` | Regra de negócio violada (ver tabela abaixo) |
+| `500 Internal Server Error` | Erro inesperado |
+
+**Erros de negócio (422):**
+
+| Código | Descrição |
+|--------|-----------|
+| `DUPLICATE_ENTRY` | Veículo já possui session ativa (ENTRY duplicado) |
+| `SECTOR_FULL` | Todos os setores estão lotados |
+| `SPOT_OCCUPIED` | A vaga nas coordenadas já está ocupada |
+| `VEHICLE_ALREADY_PARKED` | Veículo já está com status PARKED (PARKED duplicado) |
+| `INVALID_SESSION_STATE` | Transição de estado inválida (ex: EXIT em veículo com status ENTERED) |
+
+**Formato de erro:**
+
+```json
+{ "error": "SECTOR_FULL", "message": "All sectors are full" }
+```
 
 ### Revenue
 
 ```
 GET http://localhost:3003/revenue?date=2025-01-01&sector=A
-Response: { "amount": 0.00, "currency": "BRL", "timestamp": "2025-01-01T12:00:00.000Z" }
+```
+
+**Respostas:**
+
+| Status | Quando |
+|--------|--------|
+| `200 OK` | Sucesso |
+| `400 Bad Request` | Parâmetros `date` ou `sector` ausentes ou formato inválido |
+| `500 Internal Server Error` | Erro inesperado |
+
+**Exemplo de resposta (200):**
+
+```json
+{ "amount": 150.00, "currency": "BRL", "timestamp": "2025-01-01T12:00:00.000Z" }
 ```
 
 ## Como Rodar
