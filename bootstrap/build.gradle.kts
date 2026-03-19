@@ -38,7 +38,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:${property("testcontainersVersion")}")
     testImplementation("io.micronaut:micronaut-http-client")
     testRuntimeOnly("mysql:mysql-connector-java:8.0.33")
-    testRuntimeOnly("com.h2database:h2")
+    testRuntimeOnly("commons-codec:commons-codec:1.17.1")
 }
 
 tasks.withType<Test> {

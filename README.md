@@ -5,7 +5,8 @@ Sistema backend para gerenciamento de estacionamento com controle de vagas, entr
 ## Stack
 
 - **Kotlin 2.1.20** + **Java 21**
-- **Micronaut 4.7.6** (HTTP server, Data JPA, HTTP client)
+- **Micronaut 4.10.10** (HTTP server, Data JPA, HTTP client)
+- **Micronaut Gradle Plugin 4.6.2**
 - **MySQL 8** (persistência)
 - **Flyway** (migrations)
 - **Gradle Kotlin DSL** (multi-module)
@@ -97,8 +98,7 @@ O simulador envia eventos ENTRY, PARKED e EXIT. Sempre retorna HTTP 200.
 ### Revenue
 
 ```
-GET http://localhost:3003/revenue
-Body: { "date": "2025-01-01", "sector": "A" }
+GET http://localhost:3003/revenue?date=2025-01-01&sector=A
 Response: { "amount": 0.00, "currency": "BRL", "timestamp": "2025-01-01T12:00:00.000Z" }
 ```
 
@@ -127,17 +127,22 @@ Isso inicia:
 docker-compose up mysql
 ```
 
-2. Compile e rode os testes:
+2. Compile e rode os testes (requer Docker para testes de integração via Testcontainers):
 ```bash
 ./gradlew build
 ```
 
-3. Rode apenas os testes de domain (sem banco):
+3. Rode apenas os testes de domain (sem banco, sem Docker):
 ```bash
 ./gradlew :domain:test
 ```
 
-4. Inicie a aplicação:
+4. Rode apenas os testes de integração (requer Docker):
+```bash
+./gradlew :bootstrap:test
+```
+
+5. Inicie a aplicação:
 ```bash
 ./gradlew :bootstrap:run
 ```

@@ -3,6 +3,9 @@ package com.marley.parking.domain.pipeline.entry
 import com.marley.parking.domain.exception.SectorFullException
 import com.marley.parking.domain.pipeline.handler.PipelineHandler
 import com.marley.parking.domain.port.outbound.SpotRepository
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val logger = KotlinLogging.logger {}
 
 class ReserveSpotHandler(
     private val spotRepository: SpotRepository
@@ -15,6 +18,8 @@ class ReserveSpotHandler(
 
         spot.occupy()
         spotRepository.save(spot)
+
+        logger.info { "Spot reserved | sector=${sector.name.value}, spotId=${spot.id}" }
 
         return next(context.copy(reservedSpot = spot))
     }

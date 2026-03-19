@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":application"))
 
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
     implementation("io.micronaut:micronaut-http-server-netty")
     implementation("io.micronaut.serde:micronaut-serde-jackson")
 
