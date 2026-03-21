@@ -21,6 +21,8 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":application"))
 
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
+
     // Micronaut Data JPA
     implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
     ksp("io.micronaut.data:micronaut-data-processor")

@@ -9,11 +9,16 @@ import com.marley.parking.domain.model.ParkingStatus
 import com.marley.parking.domain.model.vo.LicensePlate
 import com.marley.parking.domain.model.vo.Money
 import com.marley.parking.domain.model.vo.SectorName
+import com.marley.parking.domain.exception.DuplicateEntryException
 import com.marley.parking.domain.port.outbound.ParkingSessionRepository
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Singleton
 import java.math.BigDecimal
+import java.sql.SQLIntegrityConstraintViolationException
 import java.time.LocalDate
 import java.time.ZoneOffset
+
+private val logger = KotlinLogging.logger {}
 
 @Singleton
 class ParkingSessionRepositoryAdapter(
@@ -27,10 +32,18 @@ class ParkingSessionRepositoryAdapter(
 
         val entity = PersistenceMapper.toEntity(session, sectorEntity.id!!)
 
-        val saved = if (entity.id == null) {
-            parkingSessionMicronautRepository.save(entity)
-        } else {
-            parkingSessionMicronautRepository.update(entity)
+        val saved = try {
+            if (entity.id == null) {
+                parkingSessionMicronautRepository.save(entity)
+            } else {
+                parkingSessionMicronautRepository.update(entity)
+            }
+        } catch (e: Exception) {
+            if (isUniqueActiveSessionViolation(e)) {
+                logger.warn { "DB constraint blocked duplicate active session | plate=${session.licensePlate.value}" }
+                throw DuplicateEntryException("Vehicle ${session.licensePlate.value} already has an active session")
+            }
+            throw e
         }
 
         return PersistenceMapper.toDomain(saved, session.sectorName.value)
@@ -51,6 +64,17 @@ class ParkingSessionRepositoryAdapter(
         val sectorEntity = sectorMicronautRepository.findByName(sectorName.value).orElse(null)
             ?: return 0
         return parkingSessionMicronautRepository.countActiveBySectorId(sectorEntity.id!!).toInt()
+    }
+
+    private fun isUniqueActiveSessionViolation(e: Throwable): Boolean {
+        var cause: Throwable? = e
+        while (cause != null) {
+            if (cause is SQLIntegrityConstraintViolationException && cause.message?.contains("uq_active_session") == true) {
+                return true
+            }
+            cause = cause.cause
+        }
+        return false
     }
 
     override fun sumChargedBySectorAndDate(sectorName: SectorName, date: LocalDate): Money {

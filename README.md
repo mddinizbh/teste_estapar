@@ -42,6 +42,7 @@ parking-management/
 | **`SectorRepository.findAll()` + `Sector.isFull()`** | Regra de capacidade reside no domain; adapter apenas busca dados |
 | **`WebhookEventType` enum** para dispatch de webhook | Elimina strings mágicas; `when` exaustivo sem `else` garante tratamento de todos os tipos em compile-time |
 | **Inserção idempotente no startup** | `saveAll` verifica existência individual antes de inserir; permite reiniciar sem duplicatas |
+| **Generated column + unique index para sessão ativa única** | MySQL não suporta partial unique index; coluna gerada `active_license_plate` é `license_plate` quando `exit_time IS NULL` e `NULL` caso contrário — garante no máximo 1 sessão ativa por placa no banco, prevenindo race conditions que o application layer sozinho não cobre |
 
 ## Design Patterns
 
@@ -232,3 +233,43 @@ parking_session (id, license_plate, sector_id FK, spot_id FK, entry_time,
 ```
 
 Migration gerenciada pelo Flyway em `adapter-outbound/src/main/resources/db/migration/`.
+
+## Testando com cURL
+
+### Fluxo completo (ENTRY → PARKED → EXIT)
+
+```bash
+# 1. ENTRY
+curl -s -X POST http://localhost:3003/webhook \
+  -H "Content-Type: application/json" \
+  -d '{"event_type":"ENTRY","license_plate":"ABC-1234","entry_time":"2025-01-01T10:00:00Z"}'
+
+# 2. PARKED
+curl -s -X POST http://localhost:3003/webhook \
+  -H "Content-Type: application/json" \
+  -d '{"event_type":"PARKED","license_plate":"ABC-1234","lat":-23.5505,"lng":-46.6333}'
+
+# 3. EXIT
+curl -s -X POST http://localhost:3003/webhook \
+  -H "Content-Type: application/json" \
+  -d '{"event_type":"EXIT","license_plate":"ABC-1234","exit_time":"2025-01-01T12:00:00Z"}'
+```
+
+### Testar race condition (ENTRY duplicado — segundo deve falhar com 422)
+
+```bash
+# Enviar dois ENTRYs simultâneos para a mesma placa
+curl -s -X POST http://localhost:3003/webhook \
+  -H "Content-Type: application/json" \
+  -d '{"event_type":"ENTRY","license_plate":"DUP-9999","entry_time":"2025-01-01T10:00:00Z"}' &
+curl -s -X POST http://localhost:3003/webhook \
+  -H "Content-Type: application/json" \
+  -d '{"event_type":"ENTRY","license_plate":"DUP-9999","entry_time":"2025-01-01T10:00:01Z"}' &
+wait
+```
+
+### Consultar receita
+
+```bash
+curl -s "http://localhost:3003/revenue?date=2025-01-01&sector=A"
+```
