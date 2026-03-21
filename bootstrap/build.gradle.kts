@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm")
     id("com.google.devtools.ksp")
     id("io.micronaut.application")
+    id("com.gradleup.shadow")
     kotlin("plugin.allopen")
     kotlin("plugin.jpa")
 }

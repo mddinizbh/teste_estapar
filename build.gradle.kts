@@ -5,6 +5,7 @@ plugins {
     id("io.micronaut.library") version "4.6.2" apply false
     kotlin("plugin.allopen") version "2.1.20" apply false
     kotlin("plugin.jpa") version "2.1.20" apply false
+    id("com.gradleup.shadow") version "9.0.0-beta12" apply false
 }
 
 subprojects {
