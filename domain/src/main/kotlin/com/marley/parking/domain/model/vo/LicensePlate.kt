@@ -4,5 +4,10 @@ package com.marley.parking.domain.model.vo
 value class LicensePlate(val value: String) {
     init {
         require(value.isNotBlank()) { "License plate must not be blank" }
+        require(FORMAT.matches(value)) { "Invalid license plate format: $value" }
+    }
+
+    companion object {
+        private val FORMAT = Regex("^[A-Z]{3}-?\\d[A-Z0-9]\\d{2}$")
     }
 }

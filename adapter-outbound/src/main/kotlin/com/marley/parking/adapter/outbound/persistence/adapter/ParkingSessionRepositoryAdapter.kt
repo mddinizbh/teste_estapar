@@ -1,6 +1,6 @@
 package com.marley.parking.adapter.outbound.persistence.adapter
 
-import com.marley.parking.adapter.outbound.persistence.entity.ParkingSessionEntity
+import com.marley.parking.adapter.outbound.persistence.PersistenceExceptionUtils
 import com.marley.parking.adapter.outbound.persistence.mapper.PersistenceMapper
 import com.marley.parking.adapter.outbound.persistence.repository.ParkingSessionMicronautRepository
 import com.marley.parking.adapter.outbound.persistence.repository.SectorMicronautRepository
@@ -14,7 +14,6 @@ import com.marley.parking.domain.port.outbound.ParkingSessionRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Singleton
 import java.math.BigDecimal
-import java.sql.SQLIntegrityConstraintViolationException
 import java.time.LocalDate
 import java.time.ZoneOffset
 
@@ -30,18 +29,28 @@ class ParkingSessionRepositoryAdapter(
         val sectorEntity = sectorMicronautRepository.findByName(session.sectorName.value).orElse(null)
             ?: throw IllegalStateException("Sector ${session.sectorName.value} not found")
 
-        val entity = PersistenceMapper.toEntity(session, sectorEntity.id!!)
-
         val saved = try {
-            if (entity.id == null) {
+            if (session.id == null) {
+                val entity = PersistenceMapper.toEntity(session, sectorEntity.id!!)
                 parkingSessionMicronautRepository.save(entity)
             } else {
-                parkingSessionMicronautRepository.update(entity)
+                val existing = parkingSessionMicronautRepository.findById(session.id!!).orElseThrow {
+                    IllegalStateException("ParkingSession ${session.id} not found")
+                }
+                existing.spotId = session.spotId
+                existing.parkedTime = session.parkedTime
+                existing.exitTime = session.exitTime
+                existing.amountCharged = session.amountCharged?.value
+                existing.status = session.status.name
+                parkingSessionMicronautRepository.update(existing)
             }
         } catch (e: Exception) {
-            if (isUniqueActiveSessionViolation(e)) {
+            if (PersistenceExceptionUtils.isUniqueConstraintViolation(e, "uq_active_session")) {
                 logger.warn { "DB constraint blocked duplicate active session | plate=${session.licensePlate.value}" }
                 throw DuplicateEntryException("Vehicle ${session.licensePlate.value} already has an active session")
+            }
+            if (PersistenceExceptionUtils.isOptimisticLockException(e)) {
+                throw DuplicateEntryException("Session ${session.id} was modified concurrently")
             }
             throw e
         }
@@ -64,17 +73,6 @@ class ParkingSessionRepositoryAdapter(
         val sectorEntity = sectorMicronautRepository.findByName(sectorName.value).orElse(null)
             ?: return 0
         return parkingSessionMicronautRepository.countActiveBySectorId(sectorEntity.id!!).toInt()
-    }
-
-    private fun isUniqueActiveSessionViolation(e: Throwable): Boolean {
-        var cause: Throwable? = e
-        while (cause != null) {
-            if (cause is SQLIntegrityConstraintViolationException && cause.message?.contains("uq_active_session") == true) {
-                return true
-            }
-            cause = cause.cause
-        }
-        return false
     }
 
     override fun sumChargedBySectorAndDate(sectorName: SectorName, date: LocalDate): Money {

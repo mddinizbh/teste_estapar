@@ -29,6 +29,7 @@ dependencies {
     implementation(project(":adapter-inbound"))
     implementation(project(":adapter-outbound"))
 
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("org.yaml:snakeyaml")
 

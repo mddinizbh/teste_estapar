@@ -1,52 +1,14 @@
 package com.marley.parking.integration
 
-import com.marley.parking.domain.model.Sector
-import com.marley.parking.domain.model.Spot
-import com.marley.parking.domain.model.vo.Coordinates
-import com.marley.parking.domain.model.vo.Money
-import com.marley.parking.domain.model.vo.SectorName
-import com.marley.parking.domain.port.outbound.GarageConfig
-import com.marley.parking.domain.port.outbound.GarageConfigLoader
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import io.micronaut.context.annotation.Replaces
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
-import jakarta.inject.Singleton
-import java.math.BigDecimal
-
-@Singleton
-@Replaces(GarageConfigLoader::class)
-class TestGarageConfigLoader : GarageConfigLoader {
-    override fun loadConfig(): GarageConfig {
-        return GarageConfig(
-            sectors = listOf(
-                Sector(
-                    name = SectorName("A"),
-                    basePrice = Money(BigDecimal("10.00")),
-                    maxCapacity = 100
-                )
-            ),
-            spots = listOf(
-                Spot(
-                    id = 1L,
-                    sectorName = SectorName("A"),
-                    coordinates = Coordinates(-23.5505, -46.6333)
-                ),
-                Spot(
-                    id = 2L,
-                    sectorName = SectorName("A"),
-                    coordinates = Coordinates(-23.5506, -46.6334)
-                )
-            )
-        )
-    }
-}
 
 @MicronautTest
 class WebhookIntegrationTest(
@@ -194,7 +156,7 @@ class WebhookIntegrationTest(
                 client.toBlocking().exchange(
                     HttpRequest.POST("/webhook", mapOf(
                         "event_type" to "EXIT",
-                        "license_plate" to "NONE-0001",
+                        "license_plate" to "NON-0001",
                         "exit_time" to "2026-01-04T11:00:00Z"
                     )),
                     Map::class.java

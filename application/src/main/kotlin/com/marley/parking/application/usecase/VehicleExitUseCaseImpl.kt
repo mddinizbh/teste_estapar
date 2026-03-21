@@ -6,6 +6,7 @@ import com.marley.parking.domain.pipeline.exit.ExitContext
 import com.marley.parking.domain.port.inbound.VehicleExitUseCase
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Singleton
+import jakarta.transaction.Transactional
 import java.time.Instant
 
 private val logger = KotlinLogging.logger {}
@@ -15,6 +16,7 @@ class VehicleExitUseCaseImpl(
     private val exitPipeline: Pipeline<ExitContext>
 ) : VehicleExitUseCase {
 
+    @Transactional
     override fun execute(licensePlate: LicensePlate, exitTime: Instant) {
         logger.info { "Processing EXIT | plate=${licensePlate.value}, exitTime=$exitTime" }
 

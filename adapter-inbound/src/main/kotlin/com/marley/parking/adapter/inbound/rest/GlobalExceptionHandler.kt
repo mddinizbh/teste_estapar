@@ -13,6 +13,7 @@ import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Error
+import jakarta.validation.ConstraintViolationException
 
 private val logger = KotlinLogging.logger {}
 
@@ -59,6 +60,13 @@ class GlobalExceptionHandler {
         logger.warn(e) { "Business exception: ${e.message}" }
         return HttpResponse.status<ErrorResponse>(HttpStatus.NOT_FOUND)
             .body(ErrorResponse("VEHICLE_NOT_FOUND", e.message ?: "Vehicle not found"))
+    }
+
+    @Error(global = true, exception = ConstraintViolationException::class)
+    fun handleConstraintViolation(request: HttpRequest<*>, e: ConstraintViolationException): HttpResponse<ErrorResponse> {
+        val messages = e.constraintViolations.joinToString("; ") { it.message }
+        logger.warn(e) { "Validation error: $messages" }
+        return HttpResponse.badRequest(ErrorResponse("VALIDATION_ERROR", messages))
     }
 
     @Error(global = true, exception = IllegalArgumentException::class)

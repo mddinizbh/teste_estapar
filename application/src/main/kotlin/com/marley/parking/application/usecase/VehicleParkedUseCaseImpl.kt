@@ -7,6 +7,7 @@ import com.marley.parking.domain.pipeline.parked.ParkedContext
 import com.marley.parking.domain.port.inbound.VehicleParkedUseCase
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Singleton
+import jakarta.transaction.Transactional
 import java.time.Instant
 
 private val logger = KotlinLogging.logger {}
@@ -16,6 +17,7 @@ class VehicleParkedUseCaseImpl(
     private val parkedPipeline: Pipeline<ParkedContext>
 ) : VehicleParkedUseCase {
 
+    @Transactional
     override fun execute(licensePlate: LicensePlate, coordinates: Coordinates) {
         logger.info { "Processing PARKED | plate=${licensePlate.value}, coordinates=$coordinates" }
 

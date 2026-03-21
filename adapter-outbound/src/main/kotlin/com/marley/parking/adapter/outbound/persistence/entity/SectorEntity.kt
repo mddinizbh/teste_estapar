@@ -17,5 +17,8 @@ open class SectorEntity(
     open var basePrice: BigDecimal = BigDecimal.ZERO,
 
     @Column(name = "max_capacity", nullable = false)
-    open var maxCapacity: Int = 0
+    open var maxCapacity: Int = 0,
+
+    @Version
+    open var version: Int = 0
 )

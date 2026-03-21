@@ -6,6 +6,7 @@ import com.marley.parking.domain.port.inbound.RevenueQueryUseCase
 import com.marley.parking.domain.port.outbound.ParkingSessionRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Singleton
+import jakarta.transaction.Transactional
 import java.time.LocalDate
 
 private val logger = KotlinLogging.logger {}
@@ -15,6 +16,7 @@ class RevenueQueryUseCaseImpl(
     private val parkingSessionRepository: ParkingSessionRepository
 ) : RevenueQueryUseCase {
 
+    @Transactional(Transactional.TxType.SUPPORTS)
     override fun execute(sectorName: SectorName, date: LocalDate): Money {
         logger.info { "Querying revenue | sector=${sectorName.value}, date=$date" }
 

@@ -36,5 +36,8 @@ open class ParkingSessionEntity(
     open var amountCharged: BigDecimal? = null,
 
     @Column(name = "status", nullable = false, length = 10)
-    open var status: String = ""
+    open var status: String = "",
+
+    @Version
+    open var version: Int = 0
 )

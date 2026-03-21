@@ -12,18 +12,19 @@ import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Post
+import jakarta.validation.Valid
 
 private val logger = KotlinLogging.logger {}
 
 @Controller("/webhook")
-class WebhookController(
+open class WebhookController(
     private val vehicleEntryUseCase: VehicleEntryUseCase,
     private val vehicleParkedUseCase: VehicleParkedUseCase,
     private val vehicleExitUseCase: VehicleExitUseCase
 ) {
 
     @Post
-    fun handleEvent(@Body event: WebhookEventDto): HttpResponse<Unit> {
+    open fun handleEvent(@Body @Valid event: WebhookEventDto): HttpResponse<Unit> {
         logger.info { "Webhook received | type=${event.event_type}, plate=${event.license_plate}" }
 
         val eventType = try {

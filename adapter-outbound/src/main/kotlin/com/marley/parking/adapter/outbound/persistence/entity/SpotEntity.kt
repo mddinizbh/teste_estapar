@@ -19,5 +19,8 @@ open class SpotEntity(
     open var lng: Double = 0.0,
 
     @Column(name = "occupied", nullable = false)
-    open var occupied: Boolean = false
+    open var occupied: Boolean = false,
+
+    @Version
+    open var version: Int = 0
 )

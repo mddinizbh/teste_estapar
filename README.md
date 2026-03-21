@@ -43,6 +43,10 @@ parking-management/
 | **`WebhookEventType` enum** para dispatch de webhook | Elimina strings mágicas; `when` exaustivo sem `else` garante tratamento de todos os tipos em compile-time |
 | **Inserção idempotente no startup** | `saveAll` verifica existência individual antes de inserir; permite reiniciar sem duplicatas |
 | **Generated column + unique index para sessão ativa única** | MySQL não suporta partial unique index; coluna gerada `active_license_plate` é `license_plate` quando `exit_time IS NULL` e `NULL` caso contrário — garante no máximo 1 sessão ativa por placa no banco, prevenindo race conditions que o application layer sozinho não cobre |
+| **Optimistic locking (`@Version`) em todas as entidades** | Coluna `version` em `spot`, `parking_session` e `sector`; Hibernate detecta conflitos automaticamente. Adapters usam padrão load-then-update para preservar a version gerenciada pelo Hibernate |
+| **Transações explícitas nos use cases** | `@Transactional` em cada use case garante atomicidade do pipeline inteiro (reads + writes); `RevenueQuery` usa `SUPPORTS` por ser read-only |
+| **Validação de input na borda** | `@Valid` + Bean Validation no controller; regex na `LicensePlate` (`ABC-1234` e Mercosul `ABC1D23`); `@NotBlank` no `event_type` |
+| **StartupLoader com retry e fail-fast** | 3 tentativas com backoff (1s, 3s, 5s); se todas falham, lança exceção e impede o startup |
 
 ## Design Patterns
 
@@ -68,6 +72,7 @@ Os três fluxos seguem o mesmo padrão arquitetural: reads primeiro, writes depo
 
 - **Primitivos encapsulados** em `@JvmInline value class` (LicensePlate, Money, SectorName, OccupancyRate, Coordinates)
 - **Sem `var` público** nos domain models — mutação via métodos de negócio (`park()`, `exit()`, `occupy()`)
+- **Contextos de pipeline imutáveis** — todos os campos são `val`; handlers propagam estado via `copy()`
 - **Backing properties** para encapsular estado interno
 - **Early return** e `when` exhaustivo ao invés de `else`
 - **Ports usam Value Objects** nos contratos (ex: `Coordinates` em vez de `lat/lng` primitivos)
@@ -88,13 +93,14 @@ Os três fluxos seguem o mesmo padrão arquitetural: reads primeiro, writes depo
 - Primeiros **30 minutos**: GRÁTIS
 - Após 30 minutos: `ceil(duração em horas) × price_at_entry`
 
-### Startup — Carga Idempotente da Garagem
+### Startup — Carga Idempotente da Garagem com Retry
 
 No boot, o `StartupLoader` busca a configuração do simulador (setores e spots) e persiste no banco. A inserção é **idempotente por elemento**:
 
 - **Setores**: verifica `findByName()` antes de inserir. Se já existe, pula com log.
 - **Spots**: verifica `findByCoordinates(lat, lng)` antes de inserir. Se já existe, pula com log.
 - Falha em um elemento individual é logada como warn e não impede os demais.
+- **Retry com backoff**: 3 tentativas (1s, 3s, 5s). Se todas falham, a aplicação **não inicia** (fail-fast).
 
 Isso garante que reiniciar a aplicação (ou múltiplas instâncias) nunca causa erro de duplicate key.
 
@@ -122,7 +128,7 @@ Content-Type: application/json
 | Status | Quando |
 |--------|--------|
 | `200 OK` | Evento processado com sucesso, ou `event_type` desconhecido (ignorado com log warn) |
-| `400 Bad Request` | Campos obrigatórios ausentes ou inválidos (ex: `lat`/`lng` faltando no PARKED, `license_plate` null) |
+| `400 Bad Request` | Campos obrigatórios ausentes ou inválidos (ex: `lat`/`lng` faltando no PARKED, `license_plate` null, `event_type` em branco, placa fora do formato `ABC-1234` / `ABC1D23`) |
 | `404 Not Found` | Veículo não encontrado — sem session ativa para a placa, ou coordenadas sem spot cadastrado |
 | `422 Unprocessable Entity` | Regra de negócio violada (ver tabela abaixo) |
 | `500 Internal Server Error` | Erro inesperado |
@@ -221,18 +227,25 @@ docker-compose up mysql
 
 ### Testes de Integração (@MicronautTest + Testcontainers)
 
-- **WebhookIntegrationTest** — fluxo completo via HTTP com banco real
+- **WebhookIntegrationTest** — fluxo completo (ENTRY→PARKED→EXIT→revenue), evento desconhecido, ENTRY duplicado, vaga ocupada, EXIT sem sessão
+- **RevenueIntegrationTest** — revenue após fluxo completo retorna valor > 0; revenue sem sessões retorna 0
+- **EdgeCaseIntegrationTest** — EXIT sem PARKED (422), placa formato inválido (400), event_type em branco (400)
 
 ## Modelo de Dados
 
 ```sql
-sector     (id, name, base_price, max_capacity)
-spot       (id, sector_id FK, lat, lng, occupied)
+sector     (id, name, base_price, max_capacity, version)
+spot       (id, sector_id FK, lat, lng, occupied, version)  -- UNIQUE(lat, lng)
 parking_session (id, license_plate, sector_id FK, spot_id FK, entry_time,
-                 parked_time, exit_time, price_at_entry, amount_charged, status)
+                 parked_time, exit_time, price_at_entry, amount_charged, status, version)
 ```
 
-Migration gerenciada pelo Flyway em `adapter-outbound/src/main/resources/db/migration/`.
+**Índices:**
+- `idx_session_plate_status` em `(license_plate, status)` — otimiza `findActiveByPlate`
+- `idx_session_sector_exit` em `(sector_id, exit_time)` — otimiza queries de revenue
+- `uq_spot_coordinates` UNIQUE em `(lat, lng)` — garante unicidade de coordenadas
+
+Migration gerenciada pelo Flyway em `adapter-outbound/src/main/resources/db/migration/` (V1–V3).
 
 ## Testando com cURL
 

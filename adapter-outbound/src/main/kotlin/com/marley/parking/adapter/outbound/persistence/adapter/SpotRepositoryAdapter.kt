@@ -1,8 +1,10 @@
 package com.marley.parking.adapter.outbound.persistence.adapter
 
+import com.marley.parking.adapter.outbound.persistence.PersistenceExceptionUtils
 import com.marley.parking.adapter.outbound.persistence.mapper.PersistenceMapper
 import com.marley.parking.adapter.outbound.persistence.repository.SectorMicronautRepository
 import com.marley.parking.adapter.outbound.persistence.repository.SpotMicronautRepository
+import com.marley.parking.domain.exception.SpotAlreadyOccupiedException
 import com.marley.parking.domain.model.Spot
 import com.marley.parking.domain.model.vo.Coordinates
 import com.marley.parking.domain.model.vo.SectorName
@@ -37,10 +39,18 @@ class SpotRepositoryAdapter(
     }
 
     override fun save(spot: Spot): Spot {
-        val sectorEntity = sectorMicronautRepository.findByName(spot.sectorName.value).orElse(null)
-            ?: throw IllegalStateException("Sector ${spot.sectorName.value} not found")
-        val entity = PersistenceMapper.toEntity(spot, sectorEntity)
-        val saved = spotMicronautRepository.update(entity)
+        val entity = spotMicronautRepository.findById(spot.id).orElseThrow {
+            IllegalStateException("Spot ${spot.id} not found")
+        }
+        entity.occupied = spot.isOccupied
+        val saved = try {
+            spotMicronautRepository.update(entity)
+        } catch (e: Exception) {
+            if (PersistenceExceptionUtils.isOptimisticLockException(e)) {
+                throw SpotAlreadyOccupiedException("Spot ${spot.id} was modified concurrently")
+            }
+            throw e
+        }
         return PersistenceMapper.toDomain(saved)
     }
 
