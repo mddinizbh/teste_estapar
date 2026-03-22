@@ -10,9 +10,13 @@ import com.marley.parking.domain.port.outbound.SpotRepository
 import com.marley.parking.domain.service.PricingService
 import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
+import java.time.Clock
 
 @Factory
 class UseCaseFactory {
+
+    @Singleton
+    fun clock(): Clock = Clock.systemUTC()
 
     @Singleton
     fun pricingService(): PricingService = PricingService()

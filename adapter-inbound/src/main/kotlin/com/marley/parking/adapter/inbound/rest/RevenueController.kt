@@ -7,6 +7,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.QueryValue
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 
@@ -14,7 +15,8 @@ private val logger = KotlinLogging.logger {}
 
 @Controller("/revenue")
 class RevenueController(
-    private val revenueQueryUseCase: RevenueQueryUseCase
+    private val revenueQueryUseCase: RevenueQueryUseCase,
+    private val clock: Clock
 ) {
 
     @Get
@@ -27,7 +29,7 @@ class RevenueController(
 
         return RevenueResponseDto(
             amount = revenue.value,
-            timestamp = Instant.now().toString()
+            timestamp = Instant.now(clock).toString()
         )
     }
 }

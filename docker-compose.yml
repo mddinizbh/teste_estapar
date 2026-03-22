@@ -16,13 +16,6 @@ services:
     networks:
       - parking-net
 
-  simulator:
-    image: cfontes0estapar/garage-sim:1.0.0
-    ports:
-      - "3000:3000"
-    networks:
-      - parking-net
-
   app:
     build:
       context: .
@@ -32,13 +25,20 @@ services:
         condition: service_healthy
     ports:
       - "3003:3003"
+      - "3000:3000"
     environment:
       DATASOURCES_DEFAULT_URL: jdbc:mysql://mysql:3306/parking
       DATASOURCES_DEFAULT_USERNAME: root
       DATASOURCES_DEFAULT_PASSWORD: root
-      GARAGE_SIMULATOR_BASE_URL: http://simulator:3000
+      GARAGE_SIMULATOR_BASE_URL: http://localhost:3000
     networks:
       - parking-net
+
+  simulator:
+    image: cfontes0estapar/garage-sim:1.0.0
+    network_mode: "service:app"
+    depends_on:
+      - app
 
 networks:
   parking-net:

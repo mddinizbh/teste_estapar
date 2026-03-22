@@ -8,13 +8,15 @@ import com.marley.parking.domain.port.inbound.VehicleParkedUseCase
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
+import java.time.Clock
 import java.time.Instant
 
 private val logger = KotlinLogging.logger {}
 
 @Singleton
 class VehicleParkedUseCaseImpl(
-    private val parkedPipeline: Pipeline<ParkedContext>
+    private val parkedPipeline: Pipeline<ParkedContext>,
+    private val clock: Clock
 ) : VehicleParkedUseCase {
 
     @Transactional
@@ -24,7 +26,7 @@ class VehicleParkedUseCaseImpl(
         val context = ParkedContext(
             licensePlate = licensePlate,
             coordinates = coordinates,
-            parkedTime = Instant.now()
+            parkedTime = Instant.now(clock)
         )
         parkedPipeline.execute(context)
 

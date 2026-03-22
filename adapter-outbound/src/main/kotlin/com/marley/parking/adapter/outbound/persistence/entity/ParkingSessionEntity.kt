@@ -21,7 +21,7 @@ open class ParkingSessionEntity(
     open var spotId: Long? = null,
 
     @Column(name = "entry_time", nullable = false)
-    open var entryTime: Instant = Instant.now(),
+    open var entryTime: Instant = Instant.EPOCH,
 
     @Column(name = "parked_time")
     open var parkedTime: Instant? = null,

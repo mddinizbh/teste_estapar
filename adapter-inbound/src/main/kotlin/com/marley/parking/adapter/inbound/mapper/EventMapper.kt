@@ -2,6 +2,9 @@ package com.marley.parking.adapter.inbound.mapper
 
 import com.marley.parking.domain.model.vo.LicensePlate
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeParseException
 
 object EventMapper {
 
@@ -12,6 +15,10 @@ object EventMapper {
 
     fun toInstant(value: String?): Instant {
         requireNotNull(value) { "timestamp is required" }
-        return Instant.parse(value)
+        return try {
+            Instant.parse(value)
+        } catch (e: DateTimeParseException) {
+            LocalDateTime.parse(value).toInstant(ZoneOffset.UTC)
+        }
     }
 }
