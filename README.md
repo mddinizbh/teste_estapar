@@ -45,7 +45,9 @@ parking-management/
 | **Generated column + unique index para sessão ativa única** | MySQL não suporta partial unique index; coluna gerada `active_license_plate` é `license_plate` quando `exit_time IS NULL` e `NULL` caso contrário — garante no máximo 1 sessão ativa por placa no banco, prevenindo race conditions que o application layer sozinho não cobre |
 | **Optimistic locking (`@Version`) em todas as entidades** | Coluna `version` em `spot`, `parking_session` e `sector`; Hibernate detecta conflitos automaticamente. Adapters usam padrão load-then-update para preservar a version gerenciada pelo Hibernate |
 | **Transações explícitas nos use cases** | `@Transactional` em cada use case garante atomicidade do pipeline inteiro (reads + writes); `RevenueQuery` usa `SUPPORTS` por ser read-only |
-| **Validação de input na borda** | `@Valid` + Bean Validation no controller; regex na `LicensePlate` (`ABC-1234` e Mercosul `ABC1D23`); `@NotBlank` no `event_type` |
+| **Validação de input na borda** | `@Valid` + Bean Validation no controller; regex na `LicensePlate` aceita formato brasileiro (`ABC-1234`, `ABC1D23`) e formatos do simulador (`XX12345`, `XXX12345`); `@NotBlank` no `event_type` |
+| **Timestamps flexíveis** | `EventMapper.toInstant()` aceita ISO-8601 com timezone (`2025-01-01T10:00:00Z`) e sem timezone (`2025-01-01T10:00:00`), assumindo UTC como fallback |
+| **Clock injetável** | `java.time.Clock` registrado como bean via `UseCaseFactory`; use cases e controllers usam `Instant.now(clock)` em vez de `Instant.now()`, permitindo controle de tempo em testes |
 | **StartupLoader com retry e fail-fast** | 3 tentativas com backoff (1s, 3s, 5s); se todas falham, lança exceção e impede o startup |
 
 ## Design Patterns
@@ -185,7 +187,7 @@ docker-compose up --build
 Isso inicia:
 - **MySQL 8** na porta 3306
 - **App** na porta 3003 (com Flyway migrations automáticas)
-- **Simulador** (`cfontes0estapar/garage-sim:1.0.0`)
+- **Simulador** (`cfontes0estapar/garage-sim:1.0.0`) — usa `network_mode: "service:app"` para compartilhar a rede com o app.
 
 ### Desenvolvimento Local
 
@@ -225,11 +227,16 @@ docker-compose up mysql
 - **ParkedPipelineTest** — sem sessão ativa, coordenadas sem vaga, vaga já ocupada, sucesso
 - **ExitPipelineTest** — veículo não encontrado, saída normal com cobrança
 
+### Testes de Application (Kotest BehaviorSpec, sem framework)
+
+- **VehicleParkedUseCaseTest** — valida que o `parkedTime` é controlado pelo `Clock` injetado (não usa `Instant.now()` real)
+
 ### Testes de Integração (@MicronautTest + Testcontainers)
 
 - **WebhookIntegrationTest** — fluxo completo (ENTRY→PARKED→EXIT→revenue), evento desconhecido, ENTRY duplicado, vaga ocupada, EXIT sem sessão
 - **RevenueIntegrationTest** — revenue após fluxo completo retorna valor > 0; revenue sem sessões retorna 0
 - **EdgeCaseIntegrationTest** — EXIT sem PARKED (422), placa formato inválido (400), event_type em branco (400)
+- **TestClockFactory** — substitui o `Clock` real por um fixo (`@Replaces`) nos testes de integração, garantindo tempo determinístico
 
 ## Modelo de Dados
 
