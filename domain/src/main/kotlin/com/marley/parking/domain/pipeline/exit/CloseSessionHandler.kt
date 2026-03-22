@@ -16,7 +16,7 @@ class CloseSessionHandler(
 
         val saved = parkingSessionRepository.save(session)
 
-        logger.info { "Session closed | plate=${context.licensePlate.value}, charged=${context.amountCharged}" }
+        logger.info { "Sessão encerrada | plate=${context.licensePlate.value}, entryTime=${session.entryTime}, exitTime=${context.exitTime}, cobrado=${context.amountCharged}" }
 
         return next(context.copy(session = saved))
     }

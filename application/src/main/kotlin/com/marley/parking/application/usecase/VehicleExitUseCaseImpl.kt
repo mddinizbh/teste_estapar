@@ -18,7 +18,7 @@ class VehicleExitUseCaseImpl(
 
     @Transactional
     override fun execute(licensePlate: LicensePlate, exitTime: Instant) {
-        logger.info { "Processing EXIT | plate=${licensePlate.value}, exitTime=$exitTime" }
+        logger.info { "Processando EXIT | exitTime=$exitTime" }
 
         val context = ExitContext(
             licensePlate = licensePlate,
@@ -26,6 +26,6 @@ class VehicleExitUseCaseImpl(
         )
         val result = exitPipeline.execute(context)
 
-        logger.info { "EXIT processed | plate=${licensePlate.value}, charged=${result.amountCharged}" }
+        logger.info { "EXIT processado | charged=${result.amountCharged}" }
     }
 }

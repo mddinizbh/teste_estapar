@@ -23,7 +23,7 @@ class CheckSectorCapacityHandler(
 
         val rate = sector.occupancyRate(activeCount)
 
-        logger.info { "Sector assigned | sector=${sector.name.value}, activeSessions=$activeCount, occupancy=$rate" }
+        logger.info { "Setor atribuído | sector=${sector.name.value}, sessõesAtivas=$activeCount, ocupação=$rate" }
 
         return next(context.copy(sector = sector, occupancyRate = rate))
     }

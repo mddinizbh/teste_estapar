@@ -17,7 +17,7 @@ class ParkSessionHandler(
         session.park(spot.id, context.parkedTime)
         val saved = parkingSessionRepository.save(session)
 
-        logger.info { "Session parked | plate=${context.licensePlate.value}, spotId=${spot.id}" }
+        logger.info { "Sessão estacionada | plate=${context.licensePlate.value}, spotId=${spot.id}" }
 
         return next(context.copy(session = saved))
     }

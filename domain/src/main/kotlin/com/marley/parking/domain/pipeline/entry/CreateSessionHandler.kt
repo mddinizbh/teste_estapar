@@ -21,7 +21,7 @@ class CreateSessionHandler(
 
         val saved = parkingSessionRepository.save(session)
 
-        logger.info { "Session created | plate=${context.licensePlate.value}, sector=${context.sector!!.name.value}, price=${context.priceAtEntry}" }
+        logger.info { "Sessão criada | plate=${context.licensePlate.value}, sector=${context.sector!!.name.value}, preço=${context.priceAtEntry}, entryTime=${context.entryTime}" }
 
         return next(context.copy(session = saved))
     }

@@ -18,7 +18,7 @@ class VehicleEntryUseCaseImpl(
 
     @Transactional
     override fun execute(licensePlate: LicensePlate, entryTime: Instant) {
-        logger.info { "Processing ENTRY | plate=${licensePlate.value}, entryTime=$entryTime" }
+        logger.info { "Processando ENTRY | entryTime=$entryTime" }
 
         val context = EntryContext(
             licensePlate = licensePlate,
@@ -26,6 +26,6 @@ class VehicleEntryUseCaseImpl(
         )
         val result = entryPipeline.execute(context)
 
-        logger.info { "ENTRY processed | plate=${licensePlate.value}, sector=${result.sector?.name?.value}, price=${result.priceAtEntry}" }
+        logger.info { "ENTRY processado | sector=${result.sector?.name?.value}, price=${result.priceAtEntry}" }
     }
 }

@@ -21,7 +21,7 @@ class RevenueController(
 
     @Get
     fun getRevenue(@QueryValue date: String, @QueryValue sector: String): RevenueResponseDto {
-        logger.info { "Revenue request | date=$date, sector=$sector" }
+        logger.info { "Consulta de receita | data=$date, setor=$sector" }
 
         val parsedDate = LocalDate.parse(date)
         val sectorName = SectorName(sector)

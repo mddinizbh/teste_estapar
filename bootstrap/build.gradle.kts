@@ -31,6 +31,7 @@ dependencies {
 
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
     runtimeOnly("ch.qos.logback:logback-classic")
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:8.0")
     runtimeOnly("org.yaml:snakeyaml")
 
     testImplementation("io.micronaut.test:micronaut-test-kotest5")

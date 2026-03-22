@@ -8,7 +8,7 @@ private val logger = KotlinLogging.logger {}
 class Pipeline<T>(private val handlers: List<PipelineHandler<T>>) {
 
     fun execute(context: T): T {
-        logger.info { "Pipeline started | handlers=${handlers.size}, context=${context!!::class.simpleName}" }
+        logger.info { "Pipeline iniciado | handlers=${handlers.size}, contexto=${context!!::class.simpleName}" }
 
         val chain = handlers.foldRight({ ctx: T -> ctx }) { handler, next ->
             { ctx ->
@@ -21,7 +21,7 @@ class Pipeline<T>(private val handlers: List<PipelineHandler<T>>) {
         }
 
         val result = chain(context)
-        logger.info { "Pipeline completed | context=${context!!::class.simpleName}" }
+        logger.info { "Pipeline concluído | contexto=${context!!::class.simpleName}" }
         return result
     }
 }

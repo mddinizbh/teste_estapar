@@ -17,7 +17,7 @@ class CheckDuplicateEntryHandler(
             throw DuplicateEntryException("Vehicle ${context.licensePlate.value} already has an active session")
         }
 
-        logger.info { "No duplicate entry | plate=${context.licensePlate.value}" }
+        logger.info { "Sem entrada duplicada | plate=${context.licensePlate.value}" }
 
         return next(context)
     }

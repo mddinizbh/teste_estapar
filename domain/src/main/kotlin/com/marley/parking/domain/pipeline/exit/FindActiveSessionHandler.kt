@@ -15,7 +15,7 @@ class FindActiveSessionHandler(
         val session = parkingSessionRepository.findActiveByPlate(context.licensePlate)
             ?: throw VehicleNotFoundException("No active session for plate ${context.licensePlate.value}")
 
-        logger.info { "Active session found | plate=${context.licensePlate.value}, entryTime=${session.entryTime}" }
+        logger.info { "Sessão ativa encontrada | plate=${context.licensePlate.value}, entryTime=${session.entryTime}" }
 
         return next(context.copy(session = session))
     }

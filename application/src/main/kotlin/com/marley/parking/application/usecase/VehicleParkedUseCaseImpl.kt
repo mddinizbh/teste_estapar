@@ -21,7 +21,7 @@ class VehicleParkedUseCaseImpl(
 
     @Transactional
     override fun execute(licensePlate: LicensePlate, coordinates: Coordinates) {
-        logger.info { "Processing PARKED | plate=${licensePlate.value}, coordinates=$coordinates" }
+        logger.info { "Processando PARKED | coordinates=$coordinates" }
 
         val context = ParkedContext(
             licensePlate = licensePlate,
@@ -30,6 +30,6 @@ class VehicleParkedUseCaseImpl(
         )
         parkedPipeline.execute(context)
 
-        logger.info { "PARKED processed | plate=${licensePlate.value}" }
+        logger.info { "PARKED processado" }
     }
 }

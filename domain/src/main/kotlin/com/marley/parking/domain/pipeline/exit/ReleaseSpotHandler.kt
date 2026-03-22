@@ -14,20 +14,20 @@ class ReleaseSpotHandler(
         val session = context.session!!
         val spotId = session.spotId
         if (spotId == null) {
-            logger.debug { "No spot to release | plate=${context.licensePlate.value}" }
+            logger.debug { "Sem vaga para liberar | plate=${context.licensePlate.value}" }
             return next(context)
         }
 
         val spot = spotRepository.findById(spotId)
         if (spot == null) {
-            logger.debug { "Spot not found | spotId=$spotId" }
+            logger.debug { "Vaga não encontrada | spotId=$spotId" }
             return next(context)
         }
 
         spot.release()
         spotRepository.save(spot)
 
-        logger.info { "Spot released | spotId=$spotId" }
+        logger.info { "Vaga liberada | spotId=$spotId" }
 
         return next(context.copy(spot = spot))
     }

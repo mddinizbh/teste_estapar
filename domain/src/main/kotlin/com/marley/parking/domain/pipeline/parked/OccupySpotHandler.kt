@@ -15,7 +15,7 @@ class OccupySpotHandler(
         spot.occupy()
         spotRepository.save(spot)
 
-        logger.info { "Spot occupied | spotId=${spot.id}" }
+        logger.info { "Vaga ocupada | spotId=${spot.id}" }
 
         return next(context)
     }

@@ -23,4 +23,5 @@ dependencies {
     ksp("io.micronaut:micronaut-http-validation")
     ksp("io.micronaut.validation:micronaut-validation-processor")
     ksp("io.micronaut.serde:micronaut-serde-processor")
+    ksp("io.micronaut:micronaut-inject-kotlin")
 }

@@ -15,7 +15,7 @@ class CalculateDynamicPriceHandler(
         val occupancyRate = context.occupancyRate!!
         val price = pricingService.calculateEntryPrice(sector.basePrice, occupancyRate)
 
-        logger.info { "Dynamic price calculated | sector=${sector.name.value}, base=${sector.basePrice}, entry=$price" }
+        logger.info { "Preço dinâmico calculado | sector=${sector.name.value}, preçoBase=${sector.basePrice}, preçoEntrada=$price" }
 
         return next(context.copy(priceAtEntry = price))
     }

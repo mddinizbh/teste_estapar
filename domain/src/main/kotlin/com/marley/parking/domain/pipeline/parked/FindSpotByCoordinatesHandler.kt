@@ -15,7 +15,7 @@ class FindSpotByCoordinatesHandler(
         val spot = spotRepository.findByCoordinates(context.coordinates)
             ?: throw VehicleNotFoundException("No spot found at coordinates (${context.coordinates.lat}, ${context.coordinates.lng})")
 
-        logger.info { "Spot found | spotId=${spot.id}, coordinates=${context.coordinates}" }
+        logger.info { "Vaga encontrada | spotId=${spot.id}, coordenadas=${context.coordinates}" }
 
         return next(context.copy(spot = spot))
     }

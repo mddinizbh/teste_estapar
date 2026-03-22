@@ -18,11 +18,11 @@ class RevenueQueryUseCaseImpl(
 
     @Transactional(Transactional.TxType.SUPPORTS)
     override fun execute(sectorName: SectorName, date: LocalDate): Money {
-        logger.info { "Querying revenue | sector=${sectorName.value}, date=$date" }
+        logger.info { "Consultando receita | setor=${sectorName.value}, data=$date" }
 
         val revenue = parkingSessionRepository.sumChargedBySectorAndDate(sectorName, date)
 
-        logger.info { "Revenue result | sector=${sectorName.value}, amount=${revenue.value}" }
+        logger.info { "Resultado da receita | setor=${sectorName.value}, valor=${revenue.value}" }
 
         return revenue
     }

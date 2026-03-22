@@ -22,42 +22,42 @@ class GlobalExceptionHandler {
 
     @Error(global = true, exception = DuplicateEntryException::class)
     fun handleDuplicateEntry(request: HttpRequest<*>, e: DuplicateEntryException): HttpResponse<ErrorResponse> {
-        logger.warn(e) { "Business exception: ${e.message}" }
+        logger.warn(e) { "Exceção de negócio: ${e.message}" }
         return HttpResponse.status<ErrorResponse>(HttpStatus.UNPROCESSABLE_ENTITY)
             .body(ErrorResponse("DUPLICATE_ENTRY", e.message ?: "Vehicle already has an active session"))
     }
 
     @Error(global = true, exception = SpotAlreadyOccupiedException::class)
     fun handleSpotOccupied(request: HttpRequest<*>, e: SpotAlreadyOccupiedException): HttpResponse<ErrorResponse> {
-        logger.warn(e) { "Business exception: ${e.message}" }
+        logger.warn(e) { "Exceção de negócio: ${e.message}" }
         return HttpResponse.status<ErrorResponse>(HttpStatus.UNPROCESSABLE_ENTITY)
             .body(ErrorResponse("SPOT_OCCUPIED", e.message ?: "Spot is already occupied"))
     }
 
     @Error(global = true, exception = VehicleAlreadyParkedException::class)
     fun handleVehicleAlreadyParked(request: HttpRequest<*>, e: VehicleAlreadyParkedException): HttpResponse<ErrorResponse> {
-        logger.warn(e) { "Business exception: ${e.message}" }
+        logger.warn(e) { "Exceção de negócio: ${e.message}" }
         return HttpResponse.status<ErrorResponse>(HttpStatus.UNPROCESSABLE_ENTITY)
             .body(ErrorResponse("VEHICLE_ALREADY_PARKED", e.message ?: "Vehicle is already parked"))
     }
 
     @Error(global = true, exception = SectorFullException::class)
     fun handleSectorFull(request: HttpRequest<*>, e: SectorFullException): HttpResponse<ErrorResponse> {
-        logger.warn(e) { "Business exception: ${e.message}" }
+        logger.warn(e) { "Exceção de negócio: ${e.message}" }
         return HttpResponse.status<ErrorResponse>(HttpStatus.UNPROCESSABLE_ENTITY)
             .body(ErrorResponse("SECTOR_FULL", e.message ?: "All sectors are full"))
     }
 
     @Error(global = true, exception = InvalidSessionStateException::class)
     fun handleInvalidSessionState(request: HttpRequest<*>, e: InvalidSessionStateException): HttpResponse<ErrorResponse> {
-        logger.warn(e) { "Business exception: ${e.message}" }
+        logger.warn(e) { "Exceção de negócio: ${e.message}" }
         return HttpResponse.status<ErrorResponse>(HttpStatus.UNPROCESSABLE_ENTITY)
             .body(ErrorResponse("INVALID_SESSION_STATE", e.message ?: "Invalid session state"))
     }
 
     @Error(global = true, exception = VehicleNotFoundException::class)
     fun handleVehicleNotFound(request: HttpRequest<*>, e: VehicleNotFoundException): HttpResponse<ErrorResponse> {
-        logger.warn(e) { "Business exception: ${e.message}" }
+        logger.warn(e) { "Exceção de negócio: ${e.message}" }
         return HttpResponse.status<ErrorResponse>(HttpStatus.NOT_FOUND)
             .body(ErrorResponse("VEHICLE_NOT_FOUND", e.message ?: "Vehicle not found"))
     }
@@ -65,19 +65,19 @@ class GlobalExceptionHandler {
     @Error(global = true, exception = ConstraintViolationException::class)
     fun handleConstraintViolation(request: HttpRequest<*>, e: ConstraintViolationException): HttpResponse<ErrorResponse> {
         val messages = e.constraintViolations.joinToString("; ") { it.message }
-        logger.warn(e) { "Validation error: $messages" }
+        logger.warn(e) { "Erro de validação: $messages" }
         return HttpResponse.badRequest(ErrorResponse("VALIDATION_ERROR", messages))
     }
 
     @Error(global = true, exception = IllegalArgumentException::class)
     fun handleValidationError(request: HttpRequest<*>, e: IllegalArgumentException): HttpResponse<ErrorResponse> {
-        logger.warn(e) { "Validation error: ${e.message}" }
+        logger.warn(e) { "Erro de validação: ${e.message}" }
         return HttpResponse.badRequest(ErrorResponse("VALIDATION_ERROR", e.message ?: "Validation error"))
     }
 
     @Error(global = true, exception = Exception::class)
     fun handleUnexpected(request: HttpRequest<*>, e: Exception): HttpResponse<ErrorResponse> {
-        logger.error(e) { "Unexpected error: ${e.message}" }
+        logger.error(e) { "Erro inesperado: ${e.message}" }
         return HttpResponse.serverError(ErrorResponse("INTERNAL_ERROR", "An unexpected error occurred"))
     }
 }
